@@ -24,7 +24,7 @@ export class SrsService {
       ...dto,
       userId,
       dueDate: new Date(), // New cards are due immediately
-      state: CardState.New,
+      state: CardState.NEW,
     });
 
     return this.flashcardRepository.save(newFlashcard);
@@ -89,16 +89,16 @@ export class SrsService {
 
     switch (nextState.card.state) {
       case State.New:
-        flashcard.state = CardState.New;
+        flashcard.state = CardState.NEW;
         break;
       case State.Review:
-        flashcard.state = CardState.Review;
+        flashcard.state = CardState.REVIEW;
         break;
       case State.Learning:
-        flashcard.state = CardState.Learning;
+        flashcard.state = CardState.LEARNING;
         break;
       case State.Relearning:
-        flashcard.state = CardState.Relearning;
+        flashcard.state = CardState.RELEARNING;
         break;
     }
 

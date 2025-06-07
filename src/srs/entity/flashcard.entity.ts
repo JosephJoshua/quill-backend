@@ -4,7 +4,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   Index,
-  OneToMany,
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
@@ -36,17 +35,17 @@ export type CardDetails =
   | EnglishVocabDetails;
 
 export enum CardState {
-  New = 0,
-  Learning = 1,
-  Review = 2,
-  Relearning = 3,
+  NEW = 0,
+  LEARNING = 1,
+  REVIEW = 2,
+  RELEARNING = 3,
 }
 
 export enum Rating {
-  Again = 1,
-  Hard = 2,
-  Good = 3,
-  Easy = 4,
+  AGAIN = 1,
+  HARD = 2,
+  GOOD = 3,
+  EASY = 4,
 }
 
 @Entity('flashcards')
@@ -92,7 +91,7 @@ export class Flashcard {
   @Column()
   reps: number;
 
-  @Column({ type: 'enum', enum: CardState, default: CardState.New })
+  @Column({ type: 'enum', enum: CardState, default: CardState.NEW })
   state: CardState;
 
   @Index()

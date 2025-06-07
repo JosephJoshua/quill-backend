@@ -18,13 +18,13 @@ export function getNextReviewState(
 ) {
   const state = ((): State => {
     switch (flashcard.state) {
-      case CardState.New:
+      case CardState.NEW:
         return State.New;
-      case CardState.Review:
+      case CardState.REVIEW:
         return State.Review;
-      case CardState.Learning:
+      case CardState.LEARNING:
         return State.Learning;
-      case CardState.Relearning:
+      case CardState.RELEARNING:
         return State.Relearning;
     }
   })();

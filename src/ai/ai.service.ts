@@ -39,6 +39,7 @@ import { CONVERSATION_SUMMARIZATION_QUEUE } from '../queue/queue.module';
 import { Queue } from 'bullmq';
 import { ConversationSummarizationJobData } from './conversation-summarization.processor';
 import { UserWithoutPasswordDto } from '../user/dto/user.dto';
+import { OpenEndedAnswerVerificationDto } from './dto/open-ended-answer-verification.dto';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -596,5 +597,35 @@ export class AiService {
     );
 
     return assessment;
+  }
+
+  async verifyOpenEndedAnswer(
+    question: string,
+    suggestedAnswer: string,
+    userAnswer: string,
+  ): Promise<OpenEndedAnswerVerificationDto> {
+    const userInput = JSON.stringify({ question, suggestedAnswer, userAnswer });
+    const responseData = await this.makeOpenRouterRequest<{
+      choices: { message: { content: string } }[];
+    }>({
+      model: this.analysisModel,
+      messages: [
+        { role: 'system', content: AI_PROMPTS.openEndedGrader },
+        { role: 'user', content: userInput },
+      ],
+      response_format: { type: 'json_object' },
+    });
+
+    return this.parseJsonResponse<OpenEndedAnswerVerificationDto>(
+      responseData.choices[0].message.content,
+      (o): o is OpenEndedAnswerVerificationDto => {
+        if (typeof o !== 'object') return false;
+
+        const obj = o as Record<string, any>;
+        return (
+          typeof obj.isCorrect === 'boolean' && typeof obj.feedback === 'string'
+        );
+      },
+    );
   }
 }
