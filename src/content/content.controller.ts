@@ -18,7 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentService } from './content.service';
 import { AdminCreateContentDto } from './dto/admin-create-content.dto';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User } from '../user/entity/user.entity';
+import { Role, User } from '../user/entity/user.entity';
 import { ContentListQueryDto } from './dto/content-list-query.dto';
 import {
   ContentDetailResponseDto,
@@ -27,12 +27,14 @@ import {
 import { PaginatedResponse } from 'src/util/paginated-response.interface';
 import { AdminContentListQueryDto } from './dto/admin-content-list-query.dto';
 import { AdminUpdateContentDto } from './dto/admin-update-content.dto';
+import { Roles } from '../auth/decorators/role.decorator';
 
 @Controller('content')
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Post('upload')
+  @Roles(Role.ADMIN)
   @UseInterceptors(FileInterceptor('file', {}))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
@@ -77,11 +79,13 @@ export class ContentController {
   }
 
   @Get()
+  @Roles(Role.ADMIN)
   listContent(@Query() query: AdminContentListQueryDto) {
     return this.contentService.findAll(query);
   }
 
   @Patch(':id')
+  @Roles(Role.ADMIN)
   updateContentMetadata(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: AdminUpdateContentDto,
@@ -90,11 +94,13 @@ export class ContentController {
   }
 
   @Post(':id/reprocess')
+  @Roles(Role.ADMIN)
   reprocessContent(@Param('id', ParseUUIDPipe) id: string) {
     return this.contentService.reprocessContent(id);
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteContent(@Param('id', ParseUUIDPipe) id: string) {
     return this.contentService.deleteContent(id);
