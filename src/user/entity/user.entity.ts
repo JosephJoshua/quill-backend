@@ -10,7 +10,11 @@ import { UserToContent } from '../../content/entity/user-to-content.entity';
 import { Conversation } from '../../tutor/entity/conversation.entity';
 import { Flashcard } from '../../srs/entity/flashcard.entity';
 import { CEFRLevel } from '../../content/entity/content.entity';
-import { UserProficiencyAssessment } from '../../ai/interface/user-proficiency-assessment.interface';
+
+export enum Role {
+  USER = 'user',
+  ADMIN = 'admin',
+}
 
 export interface UserMemoryProfile {
   learningGoals: string[];
@@ -31,6 +35,9 @@ export class User {
 
   @Column()
   name: string;
+
+  @Column({ array: true, type: 'enum', enum: Role, default: [Role.USER] })
+  roles: Role[];
 
   @Column({ nullable: true, type: 'enum', enum: CEFRLevel })
   estimatedCefrLevel?: CEFRLevel;

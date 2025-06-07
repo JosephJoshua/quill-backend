@@ -9,10 +9,14 @@ import {
   ParseUUIDPipe,
   BadRequestException,
   Query,
+  Patch,
+  Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentService } from './content.service';
-import { CreateContentDto } from './dto/create-content.dto';
+import { AdminCreateContentDto } from './dto/admin-create-content.dto';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '../user/entity/user.entity';
 import { ContentListQueryDto } from './dto/content-list-query.dto';
@@ -21,6 +25,8 @@ import {
   ContentSummaryResponseDto,
 } from './dto/content-response.dto';
 import { PaginatedResponse } from 'src/util/paginated-response.interface';
+import { AdminContentListQueryDto } from './dto/admin-content-list-query.dto';
+import { AdminUpdateContentDto } from './dto/admin-update-content.dto';
 
 @Controller('content')
 export class ContentController {
@@ -30,7 +36,7 @@ export class ContentController {
   @UseInterceptors(FileInterceptor('file', {}))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createContentDto: CreateContentDto,
+    @Body() createContentDto: AdminCreateContentDto,
     @GetUser() user: Omit<User, 'passwordHash'>,
   ) {
     if (!file) {
@@ -44,7 +50,7 @@ export class ContentController {
     );
   }
 
-  @Get()
+  @Get('my')
   async getUserContent(@GetUser('id') userId: string) {
     return this.contentService.findAllForUser(userId);
   }
@@ -68,5 +74,29 @@ export class ContentController {
     @GetUser() user: User,
   ): Promise<ContentSummaryResponseDto[]> {
     return this.contentService.getRecommendations(user.id);
+  }
+
+  @Get()
+  listContent(@Query() query: AdminContentListQueryDto) {
+    return this.contentService.findAll(query);
+  }
+
+  @Patch(':id')
+  updateContentMetadata(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateDto: AdminUpdateContentDto,
+  ) {
+    return this.contentService.updateContentMetadata(id, updateDto);
+  }
+
+  @Post(':id/reprocess')
+  reprocessContent(@Param('id', ParseUUIDPipe) id: string) {
+    return this.contentService.reprocessContent(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteContent(@Param('id', ParseUUIDPipe) id: string) {
+    return this.contentService.deleteContent(id);
   }
 }

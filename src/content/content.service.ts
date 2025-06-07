@@ -7,11 +7,11 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
 import { Content, ProcessingStatus } from './entity/content.entity';
-import { CreateContentDto } from './dto/create-content.dto';
+import { AdminCreateContentDto } from './dto/admin-create-content.dto';
 import { User } from '../user/entity/user.entity';
 import {
   AZURE_BLOB_SERVICE_CLIENT,
@@ -34,6 +34,8 @@ import { AiService } from '../ai/ai.service';
 import { SearchClient } from '@azure/search-documents';
 import { SearchableContent } from './interface/searchable-content.interface';
 import { plainToInstance } from 'class-transformer';
+import { AdminContentListQueryDto } from './dto/admin-content-list-query.dto';
+import { AdminUpdateContentDto } from './dto/admin-update-content.dto';
 
 @Injectable()
 export class ContentService {
@@ -47,6 +49,7 @@ export class ContentService {
     private contentRepository: Repository<Content>,
     @InjectRepository(UserToContent)
     private userToContentRepository: Repository<UserToContent>,
+    private readonly dataSource: DataSource,
     @Inject(AZURE_BLOB_SERVICE_CLIENT)
     private blobServiceClient: BlobServiceClient,
     @Inject(AZURE_SEARCH_CLIENT)
@@ -189,7 +192,7 @@ export class ContentService {
 
   async uploadAndCreateContent(
     file: Express.Multer.File,
-    createContentDto: CreateContentDto,
+    createContentDto: AdminCreateContentDto,
     user: Omit<User, 'passwordHash'>,
   ): Promise<Content> {
     const blobId = uuidv4();
@@ -261,6 +264,97 @@ export class ContentService {
       throw new InternalServerErrorException(
         'Failed to process content upload.',
       );
+    }
+  }
+
+  async findAll(query: AdminContentListQueryDto) {
+    const { page, limit, status } = query;
+    const qb = this.contentRepository.createQueryBuilder('content');
+
+    if (status) {
+      qb.where('content.processingStatus = :status', { status });
+    }
+
+    qb.orderBy('content.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return {
+      data,
+      meta: { total, page, limit, lastPage: Math.ceil(total / limit) },
+    };
+  }
+
+  async updateContentMetadata(id: string, updateDto: AdminUpdateContentDto) {
+    const result = await this.contentRepository.update(id, updateDto);
+    if (result.affected === 0)
+      throw new NotFoundException(`Content with ID ${id} not found.`);
+
+    return this.contentRepository.findOneBy({ id });
+  }
+
+  async reprocessContent(id: string) {
+    const content = await this.contentRepository.findOneBy({ id });
+    if (!content)
+      throw new NotFoundException(`Content with ID ${id} not found.`);
+
+    if (content.processingStatus === ProcessingStatus.PROCESSING) {
+      throw new ConflictException('Content is already being processed.');
+    }
+
+    await this.indexingQueue.add('process-content', { contentId: id });
+    await this.contentRepository.update(id, {
+      processingStatus: ProcessingStatus.PENDING,
+    });
+
+    return { message: 'Content has been queued for reprocessing.' };
+  }
+
+  async deleteContent(id: string): Promise<void> {
+    const content = await this.contentRepository.findOneBy({ id });
+    if (!content)
+      throw new NotFoundException(`Content with ID ${id} not found.`);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Delete from Azure AI Search
+      const searchDocsToDelete = new Array<SearchableContent>();
+      const results = await this.searchClient.search('*', {
+        filter: `contentId eq '${id}'`,
+      });
+
+      for await (const result of results.results) {
+        searchDocsToDelete.push(result.document);
+      }
+
+      if (searchDocsToDelete.length > 0) {
+        await this.searchClient.deleteDocuments(searchDocsToDelete);
+      }
+
+      // Delete from Azure Blob Storage
+      if (content.blobName) {
+        const blockBlobClient = this.containerClient.getBlockBlobClient(
+          content.blobName,
+        );
+
+        await blockBlobClient.deleteIfExists();
+      }
+
+      // Delete from PostgreSQL (within the transaction)
+      await queryRunner.manager.delete(Content, { id });
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        `Failed to delete content: ${getErrorMessage(error)}`,
+      );
+    } finally {
+      await queryRunner.release();
     }
   }
 
