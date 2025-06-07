@@ -13,7 +13,7 @@ export enum QuizStatus {
   COMPLETED = 'completed', // All questions have been graded
 }
 
-@Entity('quiz_attempts')
+@Entity('quiz_attempt')
 export class QuizAttempt {
   @PrimaryGeneratedColumn('uuid')
   id: string;

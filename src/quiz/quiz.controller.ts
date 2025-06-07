@@ -6,7 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { User } from '../user/user.entity';
+import { User } from '../user/entity/user.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { QuizService } from './quiz.service';

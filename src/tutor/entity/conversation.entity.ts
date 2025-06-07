@@ -8,11 +8,11 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-import { User } from '../../user/user.entity';
-import { Content } from '../../content/content.entity';
+import { User } from '../../user/entity/user.entity';
+import { Content } from '../../content/entity/content.entity';
 import { Dialogue } from './dialogue.entity';
 
-@Entity('conversations')
+@Entity('conversation')
 export class Conversation {
   @PrimaryGeneratedColumn('uuid')
   id: string;

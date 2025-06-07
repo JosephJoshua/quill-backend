@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { UserToContent } from '../content/user-to-content.entity';
-import { Conversation } from '../tutor/dto/conversation.entity';
-import { Flashcard } from '../srs/entity/flashcard.entity';
+import { UserToContent } from '../../content/entity/user-to-content.entity';
+import { Conversation } from '../../tutor/entity/conversation.entity';
+import { Flashcard } from '../../srs/entity/flashcard.entity';
+import { CEFRLevel } from '../../content/entity/content.entity';
+import { UserProficiencyAssessment } from '../../ai/interface/user-proficiency-assessment.interface';
 
 export interface UserMemoryProfile {
   learningGoals: string[];
@@ -16,7 +18,7 @@ export interface UserMemoryProfile {
   interests: string[];
 }
 
-@Entity('users')
+@Entity('user')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -29,6 +31,9 @@ export class User {
 
   @Column()
   name: string;
+
+  @Column({ nullable: true, type: 'enum', enum: CEFRLevel })
+  estimatedCefrLevel?: CEFRLevel;
 
   @Column({
     type: 'jsonb',

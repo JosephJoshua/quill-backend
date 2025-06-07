@@ -5,8 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { LONG_TERM_MEMORY_UPDATE_QUEUE } from '../queue/queue.module';
-import { User } from '../user/user.entity';
-import { Dialogue } from '../tutor/dto/dialogue.entity';
+import { User } from '../user/entity/user.entity';
+import { Dialogue } from '../tutor/entity/dialogue.entity';
 import { LongTermMemoryUpdateJobData } from './long-term-memory-update.processor';
 
 @Injectable()

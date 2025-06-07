@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsEnum,
 } from 'class-validator';
-import { ContentLanguage } from '../../content/content.entity';
+import { ContentLanguage } from '../../content/entity/content.entity';
 import { CardDetails } from '../entity/flashcard.entity';
 
 export class CreateFlashcardDto {

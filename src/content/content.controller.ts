@@ -14,7 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User } from '../user/user.entity';
+import { User } from '../user/entity/user.entity';
 import { ContentListQueryDto } from './dto/content-list-query.dto';
 import {
   ContentDetailResponseDto,

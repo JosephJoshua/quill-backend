@@ -3,7 +3,7 @@ import {
   ComprehensionQuestion,
   DifficultyAnalysis,
   LinguisticAnalysis,
-} from '../../content/content.entity';
+} from '../../content/entity/content.entity';
 
 export interface ContentAnalysisResult {
   difficultyLevel: CEFRLevel;

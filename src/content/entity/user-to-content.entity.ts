@@ -5,7 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from '../user/user.entity';
+import { User } from '../../user/entity/user.entity';
 import { Content } from './content.entity';
 
 @Entity('user_to_content')

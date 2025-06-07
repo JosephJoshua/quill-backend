@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Public } from './decorators/public.decorator';
-import { User } from '../user/user.entity';
+import { User } from '../user/entity/user.entity';
 
 @Controller('auth')
 export class AuthController {

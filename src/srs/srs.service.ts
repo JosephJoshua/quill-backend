@@ -5,12 +5,16 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CardState, Flashcard } from './entity/flashcard.entity';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { Brackets, LessThanOrEqual, Repository } from 'typeorm';
 import { CreateFlashcardDto } from './dto/create-flashcard.dto';
 import { UpdateFlashcardDto } from './dto/update-flashcard.dto';
 import { SubmitReviewDto } from './dto/submit-review.dto';
 import { State } from 'ts-fsrs';
 import { getNextReviewState } from './fsrs.helper';
+import { FlashcardListQueryDto } from './dto/flashcard-list-query.dto';
+import { PaginatedResponse } from 'src/util/paginated-response.interface';
+import { FlashcardDto } from './dto/flashcard.dto';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class SrsService {
@@ -18,6 +22,48 @@ export class SrsService {
     @InjectRepository(Flashcard)
     private flashcardRepository: Repository<Flashcard>,
   ) {}
+
+  async findAll(
+    userId: string,
+    query: FlashcardListQueryDto,
+  ): Promise<PaginatedResponse<FlashcardDto>> {
+    const { page, limit, q, language } = query;
+    const qb = this.flashcardRepository.createQueryBuilder('flashcard');
+    qb.where('flashcard.userId = :userId', { userId });
+
+    if (language) {
+      qb.andWhere('flashcard.language = :language', { language });
+    }
+
+    if (q) {
+      // Searches for the query string 'q' in either the front or back text
+      qb.andWhere(
+        new Brackets((subQuery) => {
+          subQuery
+            .where('flashcard.frontText ILIKE :q', { q: `%${q}%` })
+            .orWhere('flashcard.backText ILIKE :q', { q: `%${q}%` });
+        }),
+      );
+    }
+
+    qb.orderBy('flashcard.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const dtoData = data.map<FlashcardDto>((flashcard) => {
+      return {
+        ...flashcard,
+        state: flashcard.state,
+        language: flashcard.language,
+      };
+    });
+
+    return {
+      data: dtoData,
+      meta: { total, page, limit, lastPage: Math.ceil(total / limit) },
+    };
+  }
 
   async create(userId: string, dto: CreateFlashcardDto) {
     const newFlashcard = this.flashcardRepository.create({

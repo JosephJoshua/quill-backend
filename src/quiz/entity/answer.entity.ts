@@ -14,7 +14,7 @@ export enum VerificationStatus {
   VERIFIED = 'verified',
 }
 
-@Entity('answers')
+@Entity('answer')
 export class Answer {
   @PrimaryGeneratedColumn('uuid')
   id: string;

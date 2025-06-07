@@ -20,19 +20,19 @@ import {
   MultipleChoiceQuestion,
   OpenEndedQuestion,
   CEFRLevel,
-} from '../content/content.entity';
+} from '../content/entity/content.entity';
 import { SearchableContent } from '../content/interface/searchable-content.interface';
 import { TutorChatRequest } from './interface/tutor-chat-request.interface';
 import {
   AI_PROMPTS,
   buildLanguageAwareAiTutorSystemPrompt,
 } from './ai.prompts';
-import { Dialogue } from '../tutor/dto/dialogue.entity';
+import { Dialogue } from '../tutor/entity/dialogue.entity';
 import { UserProficiencyAssessment } from './interface/user-proficiency-assessment.interface';
 import { ContentAnalysisResult } from './interface/content-analysis-result.interface';
 import { TutorChatResponse } from './interface/tutor-chat-response.interface';
-import { UserMemoryProfile } from '../user/user.entity';
-import { Conversation } from '../tutor/dto/conversation.entity';
+import { UserMemoryProfile } from '../user/entity/user.entity';
+import { Conversation } from '../tutor/entity/conversation.entity';
 import { ConversationSummary } from './interface/conversation-summary.interface';
 import { InjectQueue } from '@nestjs/bullmq';
 import { CONVERSATION_SUMMARIZATION_QUEUE } from '../queue/queue.module';
@@ -536,12 +536,8 @@ export class AiService {
     );
   }
 
-  /**
-   * Assesses a user's language proficiency based on a text they have written.
-   * @param userWrittenText The text provided by the user for analysis.
-   * @returns A structured assessment of their proficiency.
-   */
   async assessUserProficiency(
+    promptText: string,
     userWrittenText: string,
   ): Promise<UserProficiencyAssessment> {
     if (!userWrittenText || userWrittenText.trim().length < 20) {
@@ -550,13 +546,15 @@ export class AiService {
 
     this.logger.log('Assessing user proficiency...');
 
+    const context = `PROMPT TEXT (Not written by the user):\n${promptText}\n\nUSER WRITTEN TEXT:\n${userWrittenText}`;
+
     const responseData = await this.makeOpenRouterRequest<{
       choices: { message: { content: string } }[];
     }>({
       model: this.analysisModel,
       messages: [
         { role: 'system', content: AI_PROMPTS.userLevelAnalysis },
-        { role: 'user', content: userWrittenText },
+        { role: 'user', content: context },
       ],
       response_format: { type: 'json_object' },
     });

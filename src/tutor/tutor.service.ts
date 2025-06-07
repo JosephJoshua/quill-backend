@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AiService } from 'src/ai/ai.service';
-import { Conversation } from 'src/tutor/dto/conversation.entity';
+import { Conversation } from 'src/tutor/entity/conversation.entity';
 import { Repository } from 'typeorm';
 import { TutorChatRequestDto } from './dto/tutor-chat-request.dto';
 import { TutorChatResponseDto } from './dto/tutor-chat-response.dto';

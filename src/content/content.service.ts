@@ -10,9 +10,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
-import { Content, ProcessingStatus } from './content.entity';
+import { Content, ProcessingStatus } from './entity/content.entity';
 import { CreateContentDto } from './dto/create-content.dto';
-import { User } from '../user/user.entity';
+import { User } from '../user/entity/user.entity';
 import {
   AZURE_BLOB_SERVICE_CLIENT,
   AZURE_SEARCH_CLIENT,
@@ -20,7 +20,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { UserToContent } from './user-to-content.entity';
+import { UserToContent } from './entity/user-to-content.entity';
 import { getErrorMessage, getErrorStack } from '../util/get-error-message';
 import { IndexingJobData } from './indexing.processor';
 import { CONTENT_INDEXING_QUEUE } from '../queue/queue.module';

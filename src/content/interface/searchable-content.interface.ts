@@ -1,4 +1,4 @@
-import { CEFRLevel } from '../content.entity';
+import { CEFRLevel } from '../entity/content.entity';
 
 export interface SearchableContent {
   id: string;

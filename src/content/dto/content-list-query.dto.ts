@@ -1,5 +1,13 @@
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { CEFRLevel, ContentLanguage } from '../content.entity';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
+import { CEFRLevel, ContentLanguage } from '../entity/content.entity';
 import { Type } from 'class-transformer';
 
 const validSortBy = ['newest', 'difficulty_asc', 'difficulty_desc'] as const;
@@ -15,11 +23,11 @@ export class ContentListQueryDto {
   genre?: string;
 
   @IsOptional()
-  @IsIn(Object.values(ContentLanguage))
+  @IsEnum(ContentLanguage)
   language?: ContentLanguage;
 
   @IsOptional()
-  @IsIn(Object.values(CEFRLevel))
+  @IsEnum(CEFRLevel)
   difficultyLevel?: CEFRLevel;
 
   @IsOptional()

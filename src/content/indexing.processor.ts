@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
 import { SearchClient } from '@azure/search-documents';
-import { Content, ProcessingStatus } from './content.entity';
+import { Content, ProcessingStatus } from './entity/content.entity';
 import { AiService } from '../ai/ai.service';
 import {
   AZURE_BLOB_SERVICE_CLIENT,

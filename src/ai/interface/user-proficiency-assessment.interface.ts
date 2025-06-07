@@ -1,4 +1,4 @@
-import { CEFRLevel } from '../../content/content.entity';
+import { CEFRLevel } from '../../content/entity/content.entity';
 
 export interface AreaForImprovement {
   area: 'Grammar' | 'Vocabulary' | 'Structure' | 'Clarity';

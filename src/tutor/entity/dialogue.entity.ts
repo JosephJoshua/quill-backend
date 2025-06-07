@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Conversation } from './conversation.entity';
 
-@Entity('dialogues')
+@Entity('dialogue')
 export class Dialogue {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User } from 'src/user/user.entity';
+import { User } from 'src/user/entity/user.entity';
 import { TutorChatRequestDto } from './dto/tutor-chat-request.dto';
 import { TutorChatResponseDto } from './dto/tutor-chat-response.dto';
 import { PaginationQueryDto } from 'src/util/pagination-query.dto';

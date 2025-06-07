@@ -3,7 +3,7 @@ import {
   ComprehensionQuestion,
   DifficultyAnalysis,
   LinguisticAnalysis,
-} from '../content.entity';
+} from '../entity/content.entity';
 
 export class ContentSummaryResponseDto {
   @Expose() id: string;

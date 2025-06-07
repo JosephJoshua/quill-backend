@@ -2,7 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Content } from '../content/content.entity';
+import { Content } from '../content/entity/content.entity';
 import { AiService } from '../ai/ai.service';
 import { QuizService } from './quiz.service';
 import { Logger } from '@nestjs/common';

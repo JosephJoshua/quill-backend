@@ -1,4 +1,4 @@
-import { ContentLanguage } from 'src/content/content.entity';
+import { ContentLanguage } from 'src/content/entity/content.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,7 +7,7 @@ import {
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
-import { User } from '../../user/user.entity';
+import { User } from '../../user/entity/user.entity';
 
 export interface BaseVocabDetails {
   partOfSpeech?: string;
@@ -48,7 +48,7 @@ export enum Rating {
   EASY = 4,
 }
 
-@Entity('flashcards')
+@Entity('flashcard')
 export class Flashcard {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -4,9 +4,9 @@ import { AiService } from './ai.service';
 import { QueueModule } from '../queue/queue.module';
 import { MemoryScheduler } from './memory.scheduler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Conversation } from '../tutor/dto/conversation.entity';
-import { Dialogue } from '../tutor/dto/dialogue.entity';
-import { User } from '../user/user.entity';
+import { Conversation } from '../tutor/entity/conversation.entity';
+import { Dialogue } from '../tutor/entity/dialogue.entity';
+import { User } from '../user/entity/user.entity';
 
 @Module({
   imports: [
