@@ -101,6 +101,9 @@ dependencies:
   scribe.js-ocr:
     specifier: ^0.8.0
     version: 0.8.0
+  ts-fsrs:
+    specifier: ^5.0.1
+    version: 5.0.1
   typeorm:
     specifier: ^0.3.22
     version: 0.3.24(pg@8.16.0)(reflect-metadata@0.2.2)(ts-node@10.9.2)
@@ -7175,6 +7178,11 @@ packages:
     dependencies:
       typescript: 5.8.3
     dev: true
+
+  /ts-fsrs@5.0.1:
+    resolution: {integrity: sha512-Vlp6V0OLpgAv4/+ZmiKKbD3nD8sHKSJz5W7gtpFitTFMqTBt9nz/SOg+kPkhE/BdeMyXaIQEAp/mf7jDnnOUxQ==}
+    engines: {node: '>=18.0.0'}
+    dev: false
 
   /ts-jest@29.3.4(@babel/core@7.27.4)(jest@29.7.0)(typescript@5.8.3):
     resolution: {integrity: sha512-Iqbrm8IXOmV+ggWHOTEbjwyCf2xZlUMv5npExksXohL+tk8va4Fjhb+X2+Rt9NBmgO7bJ8WpnMLOwih/DnMlFA==}

@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserToContent } from '../content/user-to-content.entity';
 import { Conversation } from '../ai/conversation.entity';
+import { Flashcard } from '../srs/entity/flashcard.entity';
 
 export interface UserMemoryProfile {
   learningGoals: string[];
@@ -57,4 +58,7 @@ export class User {
 
   @OneToMany(() => Conversation, (conv) => conv.user)
   conversations: Conversation[];
+
+  @OneToMany(() => Flashcard, (flashcard) => flashcard.user)
+  flashcards: Flashcard[];
 }

@@ -76,7 +76,20 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = { name: keyVaultName, location: location, tags: tags, properties: { sku: { family: 'A', name: 'standard' }, tenantId: subscription().tenantId, accessPolicies: [] } }
 
 // --- Data and AI Services ---
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' = { name: postgresServerName, location: location, tags: tags, sku: { name: 'Standard_B1ms', tier: 'Burstable' }, properties: { administratorLogin: postgresAdminLogin, administratorLoginPassword: postgresAdminPassword, version: '15', network: { privateDnsZoneArmResourceId: postgresPrivateDnsZone.id } } }
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' = {
+  name: postgresServerName
+  location: location
+  tags: tags
+  sku: {
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
+  }
+  properties: {
+    administratorLogin: postgresAdminLogin
+    administratorLoginPassword: postgresAdminPassword
+    version: '15'
+  }
+}
 resource db 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-03-01-preview' = { parent: postgresServer, name: databaseName }
 resource postgresPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = { name: 'privatelink.postgres.database.azure.com', location: 'global' }
 resource postgresPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = { parent: postgresPrivateDnsZone, name: '${postgresServerName}-dnslink', location: 'global', properties: { registrationEnabled: false, virtualNetwork: { id: virtualNetwork.id } } }

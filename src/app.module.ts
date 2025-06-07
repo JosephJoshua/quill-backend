@@ -17,6 +17,8 @@ import { QueueModule } from './queue/queue.module';
 import { AiModule } from './ai/ai.module';
 import { ContentModule } from './content/content.module';
 import { AzureModule } from './azure/azure.module';
+import { SrsController } from './srs/srs.controller';
+import { SrsModule } from './srs/srs.module';
 
 @Module({
   imports: [
@@ -112,8 +114,9 @@ import { AzureModule } from './azure/azure.module';
     AiModule,
     ContentModule,
     QueueModule,
+    SrsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, SrsController],
   providers: [
     AppService,
     {
