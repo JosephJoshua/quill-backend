@@ -6,8 +6,17 @@ import { AppService } from './app.service';
 import configuration, { validateConfig } from './config/configuration';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-
-// export const INDEXING_QUEUE = 'indexing';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore, RedisStore } from 'cache-manager-redis-store';
+import { CacheStore } from '@nestjs/common/cache';
+import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
+import { QueueModule } from './queue/queue.module';
+import { AiModule } from './ai/ai.module';
+import { ContentModule } from './content/content.module';
+import { AzureModule } from './azure/azure.module';
 
 @Module({
   imports: [
@@ -40,67 +49,77 @@ import { UserModule } from './user/user.module';
       }),
       inject: [ConfigService],
     }),
-    // CacheModule.registerAsync({
-    //   isGlobal: true,
-    //   imports: [ConfigModule],
-    //   useFactory: async (configService: ConfigService) => {
-    //     const isTls = configService.get<boolean>('redis.tls_enabled');
-    //     let store: RedisStore | null = null;
-    //     try {
-    //       store = await redisStore({
-    //         socket: {
-    //           host: configService.get<string>('redis.host'),
-    //           port: configService.get<number>('redis.port'),
-    //           tls: isTls,
-    //           connectTimeout: 10000,
-    //         },
-    //         password: configService.get<string>('redis.password'),
-    //       });
-    //       console.log('Successfully created Redis store for cache.');
-    //     } catch (err) {
-    //       console.error('Failed to create Redis store:', err);
-    //     }
-    //
-    //     return {
-    //       store: store ? (store as unknown as CacheStore) : undefined,
-    //       ttl: 60 * 5,
-    //     };
-    //   },
-    //   inject: [ConfigService],
-    // }),
-    // BullModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   useFactory: (configService: ConfigService) => ({
-    //     connection: {
-    //       host: configService.get<string>('redis.host'),
-    //       port: configService.get<number>('redis.port'),
-    //       password: configService.get<string>('redis.password'),
-    //       tls: configService.get<boolean>('redis.tls_enabled')
-    //         ? { rejectUnauthorized: false }
-    //         : undefined,
-    //       connectTimeout: 15000,
-    //       enableReadyCheck: false,
-    //       maxRetriesPerRequest: null,
-    //     },
-    //     defaultJobOptions: {
-    //       attempts: 3,
-    //       backoff: {
-    //         type: 'exponential',
-    //         delay: 1000,
-    //       },
-    //       removeOnComplete: { count: 1000 },
-    //       removeOnFail: { count: 5000 },
-    //     },
-    //   }),
-    //   inject: [ConfigService],
-    // }),
-    // BullModule.registerQueue({
-    //   name: INDEXING_QUEUE,
-    // }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const isTls = configService.get<boolean>('redis.tls_enabled');
+        let store: RedisStore | null = null;
+
+        try {
+          store = await redisStore({
+            socket: {
+              host: configService.get<string>('redis.host'),
+              port: configService.get<number>('redis.port'),
+              tls: isTls,
+              connectTimeout: 10_000,
+            },
+            password: configService.get<string>('redis.password'),
+          });
+
+          console.log('Successfully created Redis store for cache.');
+        } catch (err) {
+          console.error('Failed to create Redis store:', err);
+        }
+
+        return {
+          store: store ? (store as unknown as CacheStore) : undefined,
+          ttl: 60 * 5,
+        };
+      },
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('redis.host'),
+          port: configService.get<number>('redis.port'),
+          password: configService.get<string>('redis.password'),
+          tls: configService.get<boolean>('redis.tls_enabled')
+            ? { rejectUnauthorized: false }
+            : undefined,
+          connectTimeout: 15000,
+          enableReadyCheck: false,
+          maxRetriesPerRequest: null,
+        },
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 1000,
+          },
+          removeOnComplete: { count: 1000 },
+          removeOnFail: { count: 5000 },
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    ScheduleModule.forRoot({}),
+    AzureModule,
     AuthModule,
     UserModule,
+    AiModule,
+    ContentModule,
+    QueueModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

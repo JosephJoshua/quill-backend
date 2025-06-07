@@ -6,9 +6,14 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Content } from '../content/content.entity';
-import { Flashcard } from '../learning/flashcard.entity';
-import { Dialogue } from '../ai/dialogue.entity';
+import { UserToContent } from '../content/user-to-content.entity';
+import { Conversation } from '../ai/conversation.entity';
+
+export interface UserMemoryProfile {
+  learningGoals: string[];
+  commonMistakes: { area: string; detail: string; count: number }[];
+  interests: string[];
+}
 
 @Entity('users')
 export class User {
@@ -24,18 +29,32 @@ export class User {
   @Column()
   name: string;
 
+  @Column({
+    type: 'jsonb',
+  })
+  nativeLanguages: string[];
+
+  @Column()
+  targetLanguage: string;
+
+  @Column('jsonb', { nullable: true })
+  longTermMemory?: UserMemoryProfile;
+
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  longTermMemoryLastUpdatedAt?: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Content, (content) => content.user)
-  contents: Content[];
+  @OneToMany(() => UserToContent, (userToContent) => userToContent.user)
+  userToContents: UserToContent[];
 
-  @OneToMany(() => Flashcard, (flashcard) => flashcard.user)
-  flashcards: Flashcard[];
-
-  @OneToMany(() => Dialogue, (dialogue) => dialogue.user)
-  dialogues: Dialogue[];
+  @OneToMany(() => Conversation, (conv) => conv.user)
+  conversations: Conversation[];
 }

@@ -11,4 +11,12 @@ export class CreateUserDto {
 
   @IsString()
   name: string;
+
+  @IsString({ each: true })
+  @IsNotEmpty()
+  nativeLanguages: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  targetLanguage: string;
 }

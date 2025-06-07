@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserWithoutPasswordDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -11,14 +12,21 @@ export class UserService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async findOneById(id: string): Promise<Omit<User, 'passwordHash'>> {
+  async findOneById(id: string): Promise<UserWithoutPasswordDto> {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User with ID "${id}" not found`);
     }
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      nativeLanguages: user.nativeLanguages,
+      targetLanguage: user.targetLanguage,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -28,9 +36,7 @@ export class UserService {
     });
   }
 
-  async create(
-    createUserDto: CreateUserDto,
-  ): Promise<Omit<User, 'passwordHash'>> {
+  async create(createUserDto: CreateUserDto): Promise<UserWithoutPasswordDto> {
     const newUser = this.usersRepository.create(createUserDto);
     const savedUser = await this.usersRepository.save(newUser);
 
@@ -42,7 +48,7 @@ export class UserService {
   async updateProfile(
     id: string,
     updateData: Partial<User>,
-  ): Promise<Omit<User, 'passwordHash'>> {
+  ): Promise<UserWithoutPasswordDto> {
     delete updateData.passwordHash;
     delete updateData.email;
     delete updateData.id;

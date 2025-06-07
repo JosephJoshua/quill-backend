@@ -60,6 +60,8 @@ export class AuthService {
       email: registerDto.email,
       passwordHash: hashedPassword,
       name: registerDto.name,
+      nativeLanguages: registerDto.nativeLanguages,
+      targetLanguage: registerDto.targetLanguage,
     });
 
     const payload: JwtPayload = { email: newUser.email, sub: newUser.id };

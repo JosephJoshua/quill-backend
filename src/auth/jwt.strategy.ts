@@ -4,6 +4,7 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
+import { UserWithoutPasswordDto } from '../user/dto/user.dto';
 
 export interface JwtPayload {
   sub: string;
@@ -23,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<Omit<User, 'passwordHash'>> {
+  async validate(payload: JwtPayload): Promise<UserWithoutPasswordDto> {
     const user = await this.userService.findOneById(payload.sub);
     if (!user) {
       throw new UnauthorizedException('User not found or token invalid');
