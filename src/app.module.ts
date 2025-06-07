@@ -20,6 +20,7 @@ import { AzureModule } from './azure/azure.module';
 import { SrsController } from './srs/srs.controller';
 import { SrsModule } from './srs/srs.module';
 import { QuizModule } from './quiz/quiz.module';
+import { TutorModule } from './tutor/tutor.module';
 
 @Module({
   imports: [
@@ -117,6 +118,7 @@ import { QuizModule } from './quiz/quiz.module';
     QueueModule,
     SrsModule,
     QuizModule,
+    TutorModule,
   ],
   controllers: [AppController, SrsController],
   providers: [

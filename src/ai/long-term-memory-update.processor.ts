@@ -3,7 +3,7 @@ import { LONG_TERM_MEMORY_UPDATE_QUEUE } from '../queue/queue.module';
 import { Job } from 'bullmq';
 import { AiService } from './ai.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Conversation } from './conversation.entity';
+import { Conversation } from '../tutor/dto/conversation.entity';
 import { Repository } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import { User } from 'src/user/user.entity';

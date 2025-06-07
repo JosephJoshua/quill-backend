@@ -5,12 +5,9 @@ import {
   LinguisticAnalysis,
 } from '../../content/content.entity';
 
-export class ContentAnalysisResultDto {
+export interface ContentAnalysisResult {
   difficultyLevel: CEFRLevel;
-
   difficultyAnalysis: DifficultyAnalysis;
-
   linguisticAnalysis: LinguisticAnalysis;
-
   comprehensionQuestions: ComprehensionQuestion[];
 }

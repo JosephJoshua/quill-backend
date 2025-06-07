@@ -1,7 +1,7 @@
 import {
-  IsString,
   IsNotEmpty,
   IsOptional,
+  IsString,
   IsUUID,
   MaxLength,
 } from 'class-validator';
@@ -15,7 +15,7 @@ export class TutorChatRequestDto {
   @IsUUID()
   contentId: string;
 
-  @IsUUID()
   @IsOptional()
-  conversationId: string | null;
+  @IsUUID()
+  conversationId?: string;
 }

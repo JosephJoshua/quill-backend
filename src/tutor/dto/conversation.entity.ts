@@ -8,8 +8,8 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-import { User } from '../user/user.entity';
-import { Content } from '../content/content.entity';
+import { User } from '../../user/user.entity';
+import { Content } from '../../content/content.entity';
 import { Dialogue } from './dialogue.entity';
 
 @Entity('conversations')

@@ -22,24 +22,24 @@ import {
   CEFRLevel,
 } from '../content/content.entity';
 import { SearchableContent } from '../content/interface/searchable-content.interface';
-import { TutorChatRequestDto } from './dto/tutor-chat-request.dto';
+import { TutorChatRequest } from './interface/tutor-chat-request.interface';
 import {
   AI_PROMPTS,
   buildLanguageAwareAiTutorSystemPrompt,
 } from './ai.prompts';
-import { Dialogue } from './dialogue.entity';
-import { UserProficiencyAssessmentDto } from './dto/user-proficiency-assessment.dto';
-import { ContentAnalysisResultDto } from './dto/content-analysis-result.dto';
-import { TutorChatResponseDto } from './dto/tutor-chat-response.dto';
+import { Dialogue } from '../tutor/dto/dialogue.entity';
+import { UserProficiencyAssessment } from './interface/user-proficiency-assessment.interface';
+import { ContentAnalysisResult } from './interface/content-analysis-result.interface';
+import { TutorChatResponse } from './interface/tutor-chat-response.interface';
 import { UserMemoryProfile } from '../user/user.entity';
-import { Conversation } from './conversation.entity';
-import { ConversationSummaryDto } from './dto/conversation-summary.dto';
+import { Conversation } from '../tutor/dto/conversation.entity';
+import { ConversationSummary } from './interface/conversation-summary.interface';
 import { InjectQueue } from '@nestjs/bullmq';
 import { CONVERSATION_SUMMARIZATION_QUEUE } from '../queue/queue.module';
 import { Queue } from 'bullmq';
 import { ConversationSummarizationJobData } from './conversation-summarization.processor';
 import { UserWithoutPasswordDto } from '../user/dto/user.dto';
-import { OpenEndedAnswerVerificationDto } from './dto/open-ended-answer-verification.dto';
+import { OpenEndedAnswerVerification } from './interface/open-ended-answer-verification.interface';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -147,7 +147,7 @@ export class AiService {
   }
 
   private async getOrCreateConversation(
-    chatRequest: TutorChatRequestDto,
+    chatRequest: TutorChatRequest,
     userId: string,
     contentId: string,
   ): Promise<Conversation> {
@@ -208,11 +208,6 @@ export class AiService {
     }
   }
 
-  /**
-   * Generates an embedding vector for a given text.
-   * @param text The input text to embed.
-   * @returns A promise that resolves to an array of numbers representing the vector.
-   */
   async getEmbedding(text: string): Promise<number[]> {
     if (!text || text.trim().length === 0) {
       throw new BadRequestException(
@@ -264,15 +259,9 @@ export class AiService {
     }
   }
 
-  /**
-   * Performs the full suite of content analysis for the admin pipeline.
-   * This is intended to be called by an async BullMQ worker.
-   * @param rawText The full raw text of the content to analyze.
-   * @returns An object containing all AI-generated analysis data.
-   */
   async analyzeContentForPipeline(
     rawText: string,
-  ): Promise<ContentAnalysisResultDto> {
+  ): Promise<ContentAnalysisResult> {
     this.logger.log('Starting full content analysis pipeline...');
 
     const [difficultyResult, linguisticResult, questionsResult] =
@@ -386,16 +375,10 @@ export class AiService {
     };
   }
 
-  /**
-   * Handles the AI Tutor chat feature using a RAG architecture.
-   * @param user The user making the request.
-   * @param chatRequest The DTO containing the user's message and context.
-   * @returns The AI's response and the ID of the new dialogue turn.
-   */
   async getTutorResponse(
     user: UserWithoutPasswordDto,
-    chatRequest: TutorChatRequestDto,
-  ): Promise<TutorChatResponseDto> {
+    chatRequest: TutorChatRequest,
+  ): Promise<TutorChatResponse> {
     const { message, contentId } = chatRequest;
 
     const nativeLangs = user.nativeLanguages || ['English'];
@@ -484,7 +467,7 @@ export class AiService {
 
   async getConversationSummary(
     transcript: string,
-  ): Promise<ConversationSummaryDto> {
+  ): Promise<ConversationSummary> {
     const response = await this.makeOpenRouterRequest<{
       choices: { message: { content: string } }[];
     }>({
@@ -496,9 +479,9 @@ export class AiService {
       response_format: { type: 'json_object' },
     });
 
-    return this.parseJsonResponse<ConversationSummaryDto>(
+    return this.parseJsonResponse<ConversationSummary>(
       response.choices[0].message.content,
-      (o: any): o is ConversationSummaryDto => {
+      (o: any): o is ConversationSummary => {
         if (typeof o !== 'object') return false;
 
         const obj = o as Record<string, any>;
@@ -560,7 +543,7 @@ export class AiService {
    */
   async assessUserProficiency(
     userWrittenText: string,
-  ): Promise<UserProficiencyAssessmentDto> {
+  ): Promise<UserProficiencyAssessment> {
     if (!userWrittenText || userWrittenText.trim().length < 20) {
       throw new BadRequestException('Text for analysis is too short.');
     }
@@ -578,9 +561,9 @@ export class AiService {
       response_format: { type: 'json_object' },
     });
 
-    const assessment = this.parseJsonResponse<UserProficiencyAssessmentDto>(
+    const assessment = this.parseJsonResponse<UserProficiencyAssessment>(
       responseData.choices[0].message.content,
-      (o): o is UserProficiencyAssessmentDto => {
+      (o): o is UserProficiencyAssessment => {
         if (typeof o !== 'object') return false;
 
         const obj = o as Record<string, any>;
@@ -603,7 +586,7 @@ export class AiService {
     question: string,
     suggestedAnswer: string,
     userAnswer: string,
-  ): Promise<OpenEndedAnswerVerificationDto> {
+  ): Promise<OpenEndedAnswerVerification> {
     const userInput = JSON.stringify({ question, suggestedAnswer, userAnswer });
     const responseData = await this.makeOpenRouterRequest<{
       choices: { message: { content: string } }[];
@@ -616,9 +599,9 @@ export class AiService {
       response_format: { type: 'json_object' },
     });
 
-    return this.parseJsonResponse<OpenEndedAnswerVerificationDto>(
+    return this.parseJsonResponse<OpenEndedAnswerVerification>(
       responseData.choices[0].message.content,
-      (o): o is OpenEndedAnswerVerificationDto => {
+      (o): o is OpenEndedAnswerVerification => {
         if (typeof o !== 'object') return false;
 
         const obj = o as Record<string, any>;

@@ -5,10 +5,8 @@ export interface AreaForImprovement {
   specifics: string;
 }
 
-export class UserProficiencyAssessmentDto {
+export interface UserProficiencyAssessment {
   estimatedCefrLevel: CEFRLevel;
-
   strengths: string[];
-
   areasForImprovement: AreaForImprovement[];
 }

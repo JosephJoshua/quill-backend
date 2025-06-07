@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiService } from './ai.service';
-import { AiController } from './ai.controller';
-import { Dialogue } from './dialogue.entity';
 import { QueueModule } from '../queue/queue.module';
-import { Conversation } from './conversation.entity';
 import { MemoryScheduler } from './memory.scheduler';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Conversation } from '../tutor/dto/conversation.entity';
+import { Dialogue } from '../tutor/dto/dialogue.entity';
 import { User } from '../user/user.entity';
 
 @Module({
@@ -19,7 +18,6 @@ import { User } from '../user/user.entity';
     QueueModule,
   ],
   providers: [AiService, MemoryScheduler],
-  controllers: [AiController],
   exports: [AiService],
 })
 export class AiModule {}

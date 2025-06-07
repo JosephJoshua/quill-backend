@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { UserToContent } from '../content/user-to-content.entity';
-import { Conversation } from '../ai/conversation.entity';
+import { Conversation } from '../tutor/dto/conversation.entity';
 import { Flashcard } from '../srs/entity/flashcard.entity';
 
 export interface UserMemoryProfile {

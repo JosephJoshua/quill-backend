@@ -1,5 +1,5 @@
-import { Card, fsrs, Grade, State } from 'ts-fsrs';
-import { CardState, Flashcard } from './entity/flashcard.entity';
+import { Card, fsrs, Grade, State, Rating as FsrsRating } from 'ts-fsrs';
+import { CardState, Flashcard, Rating } from './entity/flashcard.entity';
 
 // TODO: FSRS Optimizer integration
 const f = fsrs({
@@ -14,7 +14,7 @@ export function getNextReviewState(
   flashcard: Flashcard,
   lastReviewed: Date,
   now: Date,
-  grade: Grade,
+  rating: Rating,
 ) {
   const state = ((): State => {
     switch (flashcard.state) {
@@ -26,6 +26,19 @@ export function getNextReviewState(
         return State.Learning;
       case CardState.RELEARNING:
         return State.Relearning;
+    }
+  })();
+
+  const grade = ((): Grade => {
+    switch (rating) {
+      case Rating.EASY:
+        return FsrsRating.Easy;
+      case Rating.GOOD:
+        return FsrsRating.Good;
+      case Rating.HARD:
+        return FsrsRating.Hard;
+      case Rating.AGAIN:
+        return FsrsRating.Again;
     }
   })();
 
