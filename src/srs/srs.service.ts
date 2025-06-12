@@ -71,6 +71,9 @@ export class SrsService {
       userId,
       dueDate: new Date(), // New cards are due immediately
       state: CardState.NEW,
+      learningSteps: 0,
+      reps: 0,
+      lapses: 0,
     });
 
     return this.flashcardRepository.save(newFlashcard);

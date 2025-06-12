@@ -6,6 +6,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  CreateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
 
@@ -103,4 +104,7 @@ export class Flashcard {
 
   @Column({ default: 0 })
   lapses: number; // Number of times the user forgot the card
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

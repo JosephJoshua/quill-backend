@@ -52,8 +52,8 @@ const SUMMARY_TURN_THRESHOLD = 10; // Number of turns before summarization is tr
 export class AiService {
   public readonly logger = new Logger(AiService.name);
 
-  private readonly embeddingModel = 'openai/text-embedding-ada-002';
-  private readonly chatModel = 'mistralai/mistral-7b-instruct';
+  private readonly embeddingModel = 'embedding-001'; // Gemini embedding model
+  private readonly chatModel = 'google/gemini-2.5-flash-preview';
   private readonly analysisModel = 'openai/gpt-4o-mini';
   private readonly summarizationModel = 'openai/gpt-4o-mini';
   private readonly synthesisModel = 'openai/gpt-4o-mini';
@@ -87,7 +87,10 @@ export class AiService {
       const response = await firstValueFrom(
         this.httpService.post<T>(
           'https://openrouter.ai/api/v1/chat/completions',
-          payload,
+          {
+            ...payload,
+            max_tokens: 4000,
+          },
           {
             headers: {
               Authorization: `Bearer ${apiKey}`,
@@ -215,27 +218,28 @@ export class AiService {
       );
     }
 
-    const apiKey = this.configService.get<string>('openRouter.apiKey');
-    const referrer = this.configService.get<string>('openRouter.referrer');
-    const siteName = this.configService.get<string>('openRouter.siteName');
-
     try {
       const response = await firstValueFrom(
-        this.httpService.post<{ data: { embedding: number[] }[] }>(
-          'https://openrouter.ai/api/v1/embeddings',
-          { model: this.embeddingModel, input: text },
+        this.httpService.post<{ embedding: { values: number[] } }>(
+          'https://generativelanguage.googleapis.com/v1/models/embedding-001:embedContent',
+          {
+            content: { parts: [{ text }] },
+            taskType: 'RETRIEVAL_DOCUMENT',
+          },
           {
             headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'HTTP-Referer': referrer ?? 'http://localhost:3000',
-              'X-Title': siteName ?? 'Quill',
+              'Content-Type': 'application/json',
+            },
+            params: {
+              key: this.configService.get<string>('gemini.apiKey'), // Gemini uses API key as a query parameter
             },
             timeout: 20000,
           },
         ),
       );
 
-      const embedding = response.data?.data?.[0]?.embedding;
+      const embedding = response.data?.embedding?.values;
+      // const embedding = response.data?.data?.[0]?.embedding;
       if (!embedding) {
         throw new InternalServerErrorException(
           'Invalid embedding response structure.',
@@ -247,8 +251,8 @@ export class AiService {
       const detail: string =
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         error.response?.data?.error?.message || getErrorMessage(error);
-
       this.logger.error(
+        `Error getting embedding from Gemini: ${detail}`,
         `Error getting embedding from OpenRouter: ${detail}`,
         getErrorStack(error),
       );

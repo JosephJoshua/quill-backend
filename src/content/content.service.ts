@@ -110,7 +110,6 @@ export class ContentService {
           },
         ],
       },
-      filter: `processingStatus eq '${ProcessingStatus.COMPLETED}'`,
       select: ['contentId'],
     });
 
@@ -177,9 +176,7 @@ export class ContentService {
     });
 
     if (existingUserToContent) {
-      throw new ConflictException(
-        `Content with ID "${contentId}" is already associated with user "${userId}".`,
-      );
+      return;
     }
 
     const newUserToContent = this.userToContentRepository.create({

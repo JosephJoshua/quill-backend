@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Content } from '../content/entity/content.entity';
@@ -11,6 +11,8 @@ import { QUIZ_VERIFICATION_QUEUE } from '../queue/queue.module';
 
 @Injectable()
 export class QuizService {
+  private readonly logger = new Logger(QuizService.name);
+
   constructor(
     @InjectRepository(Content) private contentRepository: Repository<Content>,
     @InjectRepository(QuizAttempt)
@@ -67,6 +69,7 @@ export class QuizService {
     await this.answerRepository.save(answersToCreate);
 
     if (openEndedCount > 0) {
+      this.logger.log('Queueing verification for open-ended answers');
       await this.verificationQueue.add('verify-answers', {
         attemptId: attempt.id,
       });

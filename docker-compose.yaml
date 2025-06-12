@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Backend Application Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quill-backend
+    restart: always
+    env_file:
+      - .env
+    command: pnpm run start:dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000" # Expose port 3000 to other services and the host
+    volumes:
+      - .:/usr/src/app # Mount source for hot-reloading in dev
+      - /usr/src/app/node_modules # Do not mount local node_modules
+
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:15
+    container_name: quill-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Caching and Job Queue Service
+  redis:
+    image: redis:7-alpine
+    container_name: quill-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Ngrok Service for HTTPS Tunneling
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: quill-ngrok
+    restart: always
+    ports:
+      - "4040:4040" # ngrok Web UI
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    command: http backend:3000 # Forward to the 'backend' service on port 3000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

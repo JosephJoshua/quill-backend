@@ -57,7 +57,7 @@ import { TutorModule } from './tutor/tutor.module';
       isGlobal: true,
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const isTls = configService.get<boolean>('redis.tls_enabled');
+        const isTls = configService.get<boolean>('redis.tlsEnabled');
         let store: RedisStore | null = null;
 
         try {
@@ -90,7 +90,7 @@ import { TutorModule } from './tutor/tutor.module';
           host: configService.get<string>('redis.host'),
           port: configService.get<number>('redis.port'),
           password: configService.get<string>('redis.password'),
-          tls: configService.get<boolean>('redis.tls_enabled')
+          tls: configService.get<boolean>('redis.tlsEnabled')
             ? { rejectUnauthorized: false }
             : undefined,
           connectTimeout: 15000,
@@ -120,7 +120,7 @@ import { TutorModule } from './tutor/tutor.module';
     QuizModule,
     TutorModule,
   ],
-  controllers: [AppController, SrsController],
+  controllers: [AppController],
   providers: [
     AppService,
     {

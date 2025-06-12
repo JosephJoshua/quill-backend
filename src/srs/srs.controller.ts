@@ -19,7 +19,6 @@ import { SrsService } from './srs.service';
 import { UpdateFlashcardDto } from './dto/update-flashcard.dto';
 import { FlashcardListQueryDto } from './dto/flashcard-list-query.dto';
 import { PaginatedResponse } from '../util/paginated-response.interface';
-import { Flashcard } from './entity/flashcard.entity';
 import { FlashcardDto } from './dto/flashcard.dto';
 
 @Controller('flashcards')

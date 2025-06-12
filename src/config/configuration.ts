@@ -20,6 +20,14 @@ export const validationSchema = z.object({
   OPENROUTER_API_KEY: z.string(),
   OPENROUTER_REFERRER: z.string().url().optional(),
   OPENROUTER_SITE_NAME: z.string().optional(),
+  GEMINI_API_KEY: z.string(),
+  REDIS_HOST: z.string(),
+  REDIS_PORT: z.string().regex(/^\d+$/).default('6379').transform(Number),
+  REDIS_PASSWORD: z.string(),
+  REDIS_TLS_ENABLED: z
+    .string()
+    .default('false')
+    .transform((val) => val.toLowerCase() === 'true'),
 });
 
 export const validateConfig = (config: Record<string, unknown>) => {
@@ -62,6 +70,15 @@ export default () => {
       apiKey: env.OPENROUTER_API_KEY,
       referrer: env.OPENROUTER_REFERRER,
       siteName: env.OPENROUTER_SITE_NAME,
+    },
+    gemini: {
+      apiKey: env.GEMINI_API_KEY,
+    },
+    redis: {
+      host: env.REDIS_HOST,
+      port: env.REDIS_PORT,
+      password: env.REDIS_PASSWORD,
+      tlsEnabled: env.REDIS_TLS_ENABLED,
     },
   };
 };

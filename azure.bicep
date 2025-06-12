@@ -32,6 +32,15 @@ param jwtSecret string
 @secure()
 param openRouterApiKey string
 
+@description('The provider for the frontend static web app, e.g., "GitHub".')
+param frontendProvider string = 'GitHub'
+
+@description('The URL of the GitHub repository for the frontend static web app.')
+param frontendRepoUrl string = 'https://github.com/JosephJoshua/quill-frontend'
+
+@description('The branch of the GitHub repository for the frontend static web app.')
+param frontendRepoBranch string = 'main'
+
 var resourceToken = '${projectName}${environment}'
 var tags = { project: projectName, environment: environment }
 
@@ -40,7 +49,7 @@ var logAnalyticsWorkspaceName = '${resourceToken}-logs'
 var vnetName = '${resourceToken}-vnet'
 var storageAccountName = '${resourceToken}storage'
 var containerRegistryName = '${resourceToken}acr'
-var keyVaultName = '${resourceToken}-kv'
+var keyVaultName = '${resourceToken}-keyvault'
 var postgresServerName = '${resourceToken}-postgres'
 var redisCacheName = '${resourceToken}-redis'
 var aiSearchName = '${resourceToken}-aisearch'
@@ -50,7 +59,39 @@ var frontendStaticWebAppName = '${projectName}-frontend-ui'
 
 // --- Core Infrastructure: Logging and Networking ---
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = { name: logAnalyticsWorkspaceName, location: location, tags: tags, properties: { sku: { name: 'PerGB2018' }, retentionInDays: 30 } }
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = { name: vnetName, location: location, tags: tags, properties: { addressSpace: { addressPrefixes: [ '10.0.0.0/16' ] }, subnets: [ { name: 'container-apps-subnet', properties: { addressPrefix: '10.0.0.0/23' } }, { name: 'private-endpoints-subnet', properties: { addressPrefix: '10.0.2.0/24', privateEndpointNetworkPolicies: 'Disabled' } } ] } }
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+  name: vnetName
+  location: location
+  tags: tags
+  properties: {
+    addressSpace: {
+      addressPrefixes: [ '10.0.0.0/16' ]
+    }
+    subnets: [
+      {
+        name: 'container-apps-subnet'
+        properties: {
+          addressPrefix: '10.0.0.0/23'
+          delegations: [
+            {
+              name: 'cae-delegation'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+        }
+      }
+      {
+        name: 'private-endpoints-subnet'
+        properties: {
+          addressPrefix: '10.0.2.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+        }
+      }
+    ]
+  }
+}
 
 // --- Foundational Services: Storage, Registry, Key Vault ---
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
@@ -76,7 +117,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = { name: keyVaultName, location: location, tags: tags, properties: { sku: { family: 'A', name: 'standard' }, tenantId: subscription().tenantId, accessPolicies: [] } }
 
 // --- Data and AI Services ---
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' = {
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   name: postgresServerName
   location: location
   tags: tags
@@ -88,19 +129,52 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-pr
     administratorLogin: postgresAdminLogin
     administratorLoginPassword: postgresAdminPassword
     version: '15'
+    storage: {
+      storageSizeGB: 32
+    }
   }
 }
 resource db 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-03-01-preview' = { parent: postgresServer, name: databaseName }
 resource postgresPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = { name: 'privatelink.postgres.database.azure.com', location: 'global' }
 resource postgresPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = { parent: postgresPrivateDnsZone, name: '${postgresServerName}-dnslink', location: 'global', properties: { registrationEnabled: false, virtualNetwork: { id: virtualNetwork.id } } }
-resource postgresPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = { name: '${postgresServerName}-pe', location: location, properties: { subnet: { id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, 'private-endpoints-subnet') }, privateLinkServiceConnections: [ { name: '${postgresServerName}-pe-conn', properties: { privateLinkServiceId: postgresServer.id, groupIds: [ 'postgresqlServer' ] } } ] } }
+resource postgresPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
+  name: '${postgresServerName}-pe'
+  location: location
+  properties: {
+    subnet: {
+      id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, 'private-endpoints-subnet')
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${postgresServerName}-pe-conn'
+        properties: {
+          privateLinkServiceId: postgresServer.id
+          groupIds: [ 'postgresqlServer' ]
+        }
+      }
+    ]
+  }
+  resource privateDnsZoneGroup 'privateDnsZoneGroups@2023-05-01' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: 'postgres-private-dns-zone-config'
+          properties: {
+            privateDnsZoneId: postgresPrivateDnsZone.id
+          }
+        }
+      ]
+    }
+  }
+}
 resource redisCache 'Microsoft.Cache/redis@2023-08-01' = { name: redisCacheName, location: location, tags: tags, properties: { sku: { name: 'Standard', family: 'C', capacity: 0 }, enableNonSslPort: false, minimumTlsVersion: '1.2' } }
 resource aiSearchService 'Microsoft.Search/searchServices@2023-11-01' = { name: aiSearchName, location: location, tags: tags, sku: { name: 'free' }, properties: { replicaCount: 1, partitionCount: 1, hostingMode: 'default' } }
 
 // --- Storing Secrets in Key Vault ---
 resource postgresPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'PostgresPassword', properties: { value: postgresAdminPassword } }
 resource redisPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'RedisPassword', properties: { value: redisCache.listKeys().primaryKey } }
-resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'AzureStorageConnectionString', properties: { value: storageAccount.listKeys().keys[0].value } }
+resource storageSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'AzureStorageConnectionString', properties: { value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}' } }
 resource searchSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'AzureSearchKey', properties: { value: aiSearchService.listAdminKeys().primaryKey } }
 resource jwtSecretValue 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'JwtSecret', properties: { value: jwtSecret } }
 resource openRouterSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = { parent: keyVault, name: 'OpenRouterApiKey', properties: { value: openRouterApiKey } }
@@ -179,10 +253,10 @@ resource backendContainerApp 'Microsoft.App/containerApps@2023-05-01' = {
 resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = { parent: keyVault, name: 'add', properties: { accessPolicies: [ { tenantId: subscription().tenantId, objectId: backendContainerApp.identity.principalId, permissions: { secrets: [ 'get', 'list' ] } } ] } }
 
 // --- Frontend: Static Web App ---
-// resource frontendStaticWebApp 'Microsoft.Web/staticSites@2023-01-01' = { name: frontendStaticWebAppName, location: location, tags: tags, sku: { name: 'Free' } }
+resource frontendStaticWebApp 'Microsoft.Web/staticSites@2023-01-01' = { name: frontendStaticWebAppName, location: location, tags: tags, sku: { name: 'Free', tier: 'Free' }, properties: { provider: frontendProvider, repositoryUrl: frontendRepoUrl, branch: frontendRepoBranch } }
 
 // --- Outputs ---
 output backendHostName string = backendContainerApp.properties.configuration.ingress.fqdn
-// output frontendUrl string = 'https://${frontendStaticWebApp.properties.defaultHostname}'
+output frontendUrl string = 'https://${frontendStaticWebApp.properties.defaultHostname}'
 output containerRegistryLoginServer string = containerRegistry.properties.loginServer
 output keyVaultName string = keyVault.name

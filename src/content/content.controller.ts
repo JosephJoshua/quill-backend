@@ -64,6 +64,13 @@ export class ContentController {
     return this.contentService.find(query);
   }
 
+  @Get('recommendations')
+  async getRecommendations(
+    @GetUser() user: User,
+  ): Promise<ContentSummaryResponseDto[]> {
+    return this.contentService.getRecommendations(user.id);
+  }
+
   @Get(':id')
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
@@ -71,11 +78,12 @@ export class ContentController {
     return this.contentService.findOne(id);
   }
 
-  @Get('recommendations')
-  async getRecommendations(
+  @Post(':id/add-to-library')
+  async addToLibrary(
     @GetUser() user: User,
-  ): Promise<ContentSummaryResponseDto[]> {
-    return this.contentService.getRecommendations(user.id);
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.contentService.addToUserContent(id, user.id);
   }
 
   @Get()

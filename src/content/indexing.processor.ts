@@ -245,9 +245,14 @@ export class IndexingProcessor extends WorkerHost {
         );
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const data = (await scribeExtractText([buffer], ['eng'], 'txt', {
-          mode: 'quality',
-        })) as string;
+        const data = (await scribeExtractText(
+          [buffer],
+          ['eng', 'jpn', 'chi_sim'],
+          'txt',
+          {
+            mode: 'quality',
+          },
+        )) as string;
 
         this.logger.debug(
           `Job ${jobId}: Extracted ${data.length} chars from PDF or image.`,

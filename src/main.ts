@@ -2,9 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { ExpressAdapter } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const adapter = new ExpressAdapter();
+  adapter.set('trust proxy', 1);
+
+  const app = await NestFactory.create(AppModule, adapter);
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port');
   const logger = new Logger('Bootstrap');
@@ -14,7 +18,7 @@ async function bootstrap() {
     process.exit(1);
   }
 
-  app.enableCors();
+  app.enableCors({ origin: true, credentials: true });
 
   app.useGlobalPipes(
     new ValidationPipe({

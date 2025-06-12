@@ -107,6 +107,13 @@ export class UserService {
       dto.text,
     );
 
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (user === null) {
+      throw new NotFoundException(`User with ID "${userId}" not found`);
+    }
+
+    user.estimatedCefrLevel = assessmentResult.estimatedCefrLevel;
+
     const assessmentLog = this.assessmentRepository.create({
       userId,
       promptId: dto.promptId,
@@ -116,10 +123,7 @@ export class UserService {
 
     await Promise.all([
       this.assessmentRepository.save(assessmentLog),
-      this.userRepository.upsert(
-        { id: userId, estimatedCefrLevel: assessmentResult.estimatedCefrLevel },
-        ['userId'],
-      ),
+      this.userRepository.save(user),
     ]);
 
     return assessmentResult;

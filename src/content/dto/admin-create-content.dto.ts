@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsNotEmpty, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+  IsNumber,
+  IsEnum,
+} from 'class-validator';
+import { ContentLanguage } from '../entity/content.entity';
 
 export class AdminCreateContentDto {
   @IsString()
@@ -13,8 +20,8 @@ export class AdminCreateContentDto {
   @IsOptional()
   genre?: string;
 
-  @IsNumber()
-  languageId: number;
+  @IsEnum(ContentLanguage)
+  language: ContentLanguage;
 
   @IsString()
   @IsOptional()
